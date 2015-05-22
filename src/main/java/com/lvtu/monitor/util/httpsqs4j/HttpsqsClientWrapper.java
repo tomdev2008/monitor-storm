@@ -23,11 +23,10 @@ public class HttpsqsClientWrapper {
 	}
 	
 	public void init() {
-		String ip = Constant.getValue("httpsqs.ip", PROPERTY_FILE.HTTPSQS);
-		int port = Integer.valueOf(Constant.getValue("httpsqs.port", PROPERTY_FILE.HTTPSQS));
+		String connectUrl = Constant.getValue("httpsqs.connectUrl", PROPERTY_FILE.HTTPSQS);
 		String charset = Constant.getValue("httpsqs.charset", PROPERTY_FILE.HTTPSQS);
 		try {
-			Httpsqs4j.setConnectionInfo(ip, port, charset);
+			Httpsqs4j.setConnectionInfo(connectUrl, charset);
 			HttpsqsClient newClient = Httpsqs4j.createNewClient();
 			client = newClient;
 		} catch (HttpsqsException e) {

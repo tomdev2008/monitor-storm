@@ -31,11 +31,11 @@ public class Httpsqs4j {
 	 * 设置连接信息
 	 * 
 	 * @param ip
-	 * @param port
+	 * @param connectUrl
 	 * @param charset 字符集
 	 * @throws HttpsqsException
 	 */
-	public static void setConnectionInfo(String ip, int port, String charset) throws HttpsqsException {
+	public static void setConnectionInfo(String connectUrl, String charset) throws HttpsqsException {
 		try {
 			"".getBytes(charset);
 		} catch (UnsupportedEncodingException e) {
@@ -43,9 +43,9 @@ public class Httpsqs4j {
 		}
 		URL url;
 		HttpURLConnection connection = null;
-		String prefix = "http://" + ip + ":" + port + "/";
+		prefix = connectUrl;
 		try {
-			url = new URL(prefix);
+			url = new URL(connectUrl);
 			connection = (HttpURLConnection) url.openConnection();
 			connection.connect();
 		} catch (IOException e) {

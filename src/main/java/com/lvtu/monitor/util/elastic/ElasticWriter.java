@@ -15,7 +15,7 @@ import com.lvtu.monitor.util.Constant.PROPERTY_FILE;
 /**
  * @Title: ElasticWriter.java
  * @Package com.lvtu.monitor.util.elastic
- * @Description: TODO
+ * @Description: elastic-search的索引写入工具类
  * @author lvzimin
  * @date 2015年5月15日 下午4:35:34
  * @version V1.0.0
@@ -53,7 +53,6 @@ public class ElasticWriter {
 	 */
 	public static void write(String index, String type, String id, Object obj) {
 
-		// long time = System.currentTimeMillis();
 		String json = Json.toJson(obj);
 
 		IndexRequest indexRequest = new IndexRequest(index, type, id)
@@ -62,7 +61,6 @@ public class ElasticWriter {
 			// id不存在,新建;id已存在,更新
 			elasticClient.index(indexRequest).get();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

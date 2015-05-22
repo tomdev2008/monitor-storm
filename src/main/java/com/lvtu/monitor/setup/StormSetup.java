@@ -3,6 +3,7 @@ package com.lvtu.monitor.setup;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.nutz.ioc.Ioc;
+import org.nutz.ioc.loader.annotation.IocBean;
 import org.nutz.mvc.NutConfig;
 import org.nutz.mvc.Setup;
 
@@ -10,6 +11,7 @@ import backtype.storm.LocalCluster;
 
 import com.lvtu.monitor.job.ElasticIndexJob;
 import com.lvtu.monitor.storm.topology.ApiStatTopology;
+import com.lvtu.monitor.util.Constant;
 import com.lvtu.monitor.util.elastic.ElasticWriter;
 import com.lvtu.monitor.util.httpsqs4j.HttpsqsClientWrapper;
 
@@ -21,6 +23,7 @@ import com.lvtu.monitor.util.httpsqs4j.HttpsqsClientWrapper;
  * @date 2015年5月14日 下午12:44:02
  * @version V1.0.0
  */
+@IocBean
 public class StormSetup implements Setup {
 
 	private Log log = LogFactory.getLog(this.getClass());
@@ -35,11 +38,11 @@ public class StormSetup implements Setup {
 		// 初始化httpsqs队列客户端
 		this.initHttpsqsClient(ioc);
 		// 启动storm并加载任务
-		this.startCluster(ioc);
+		this.startupCluster(ioc);
 		// 初始化elastic-search客户端
 		this.initElasticClient(ioc);
-		ElasticIndexJob job = new ElasticIndexJob();
-		job.run();
+		// 启动更新elastic索引的定时任务
+		this.startupElasticJob(ioc);
 	}
 
 	@Override
@@ -47,9 +50,9 @@ public class StormSetup implements Setup {
 		log.info("stormSetup.destroy...");
 		Ioc ioc = config.getIoc();
 		// 停止Elastic
-		this.shutDownElasticClient(ioc);
+		this.shutdownElasticClient(ioc);
 		// 停止storm
-		this.shutDownCluster();
+		this.shutdownCluster();
 	}
 
 	private void initHttpsqsClient(Ioc ioc) {
@@ -63,12 +66,12 @@ public class StormSetup implements Setup {
 		elasticWriter.init();
 	}
 
-	private void shutDownElasticClient(Ioc ioc) {
+	private void shutdownElasticClient(Ioc ioc) {
 		ElasticWriter elasticWriter = ioc.get(ElasticWriter.class);
 		elasticWriter.close();
 	}
 
-	private void startCluster(Ioc ioc) {
+	private void startupCluster(Ioc ioc) {
 
 		cluster = new LocalCluster();
 		ApiStatTopology apiStatTopology = ioc.get(ApiStatTopology.class);
@@ -76,8 +79,17 @@ public class StormSetup implements Setup {
 				apiStatTopology.getConfig(), apiStatTopology.getTopology());
 	}
 
-	private void shutDownCluster() {
+	private void shutdownCluster() {
 		cluster.shutdown();
+	}
+
+	private void startupElasticJob(Ioc ioc) {
+		boolean isMaster = Boolean.valueOf(Constant.getValue("node.master"));
+		// 只有主节点运行job
+		if (isMaster) {
+			ElasticIndexJob indexJob = ioc.get(ElasticIndexJob.class);
+			indexJob.run();
+		}
 	}
 
 }

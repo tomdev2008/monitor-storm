@@ -9,6 +9,7 @@ import backtype.storm.topology.TopologyBuilder;
 import com.lvtu.monitor.storm.bolts.ApiAccessCounter;
 import com.lvtu.monitor.storm.bolts.ApiIpCounter;
 import com.lvtu.monitor.storm.spouts.NginxLogReader;
+import com.lvtu.monitor.util.Constant;
 
 /**
  * @Title: ApiStatTopology.java
@@ -23,6 +24,7 @@ public class ApiStatTopology {
 
 	/**
 	 * topology名称
+	 * 
 	 * @return
 	 */
 	public String getName() {
@@ -31,17 +33,21 @@ public class ApiStatTopology {
 
 	/**
 	 * topology配置
+	 * 
 	 * @return
 	 */
 	public Config getConfig() {
 		Config conf = new Config();
-		conf.setDebug(true);
-		conf.put(Config.TOPOLOGY_MAX_SPOUT_PENDING, 1);
+		conf.setDebug(Boolean.valueOf(Constant
+				.getValue("api_stat_topology.conf.debug")));
+		conf.put(Config.TOPOLOGY_MAX_SPOUT_PENDING, Integer.valueOf(Constant
+				.getValue("api_stat_topology.conf.max_spout_pending")));
 		return conf;
 	}
 
 	/**
 	 * topology的
+	 * 
 	 * @return
 	 */
 	public StormTopology getTopology() {
@@ -49,12 +55,18 @@ public class ApiStatTopology {
 		NginxLogReader logReader = new NginxLogReader();
 		ApiAccessCounter accessCounter = new ApiAccessCounter();
 		ApiIpCounter ipCounter = new ApiIpCounter();
+		Integer accessCounterNum = Integer.valueOf(Constant
+				.getValue("api_access_counter.parallelism_hint"));
+		Integer ipCounterNum = Integer.valueOf(Constant
+				.getValue("api_ip_counter.parallelism_hint"));
 		builder.setSpout("logReader", logReader);
-		builder.setBolt("accessCounter", accessCounter, 1).shuffleGrouping(
+		builder.setBolt("accessCounter", accessCounter, accessCounterNum)
+				.shuffleGrouping("logReader");
+		builder.setBolt("ipCounter", ipCounter, ipCounterNum).shuffleGrouping(
 				"logReader");
-		builder.setBolt("ipCounter", ipCounter, 1).shuffleGrouping(
-				"logReader");
+		// builder.setBolt("ipCounter", ipCounter,
+		// 1).fieldsGrouping("accessCounter",
+		// new Fields("accessCounterOutput"));
 		return builder.createTopology();
 	}
-
 }

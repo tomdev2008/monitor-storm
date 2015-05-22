@@ -6,7 +6,7 @@ import backtype.storm.generated.StormTopology;
 /** 
  * @Title: LvtuTopoloty.java 
  * @Package com.lvtu.monitor.storm.topology 
- * @Description: TODO 
+ * @Description: Topoloty接口 
  * @author lvzimin 
  * @date 2015年5月18日 下午5:45:25 
  * @version V1.0.0 
