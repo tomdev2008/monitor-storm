@@ -59,3 +59,6 @@ $RECYCLE.BIN/
 *.lnk
 
 /target/
+.classpath
+.project
+/.settings/
