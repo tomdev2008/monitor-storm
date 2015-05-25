@@ -1,96 +1,161 @@
 package com.lvtu.monitor.storm.entity;
 
 import java.io.Serializable;
-import java.util.Map;
+import java.util.Date;
 
-/** 
-* @Title: NginxLog.java 
-* @Package com.lvtu.monitor.storm.entity 
-* @Description: 对应httpsqs队列中取出的json格式nginx日志 
-* @author lvzimin 
-* @date 2015年5月19日 上午11:09:44 
-* @version V1.0.0 
-*/
+/**
+ * @Title: NginxLog.java
+ * @Package com.lvtu.monitor.storm.entity
+ * @Description: 对应httpsqs队列中取出的nginx日志
+ * @author lvzimin
+ * @date 2015年5月19日 上午11:09:44
+ * @version V1.0.0
+ */
 public class NginxLog implements Serializable {
 
 	private static final long serialVersionUID = -7506569473260140787L;
 
 	/**
-	 * ip地址
+	 * 客户端IP地址
 	 */
-	private String addr;
+	private String remoteAddr;
+
+	/**
+	 * 客户端用户名称
+	 */
+	private String remoteUser;
+
+	/**
+	 * 通用日志格式下的本地时间
+	 */
+	private Date timeLocal;
+
+	/**
+	 * 客户端请求的域名
+	 */
+	private String httpHost;
+
+	/**
+	 * 记录请求的URL和HTTP协议
+	 */
+	private NginxRequestInfo request;
+
+	/**
+	 * 状态码
+	 */
+	private int status;
+
+	/**
+	 * 发送给客户端的总字节数
+	 */
+	private int bodyBytesSent;
+
+	/**
+	 * http请求端的真正IP
+	 */
+	private String httpXforwardedFor;
+
+	/**
+	 * 客户端浏览器相关信息
+	 */
+	private String httpUserAgent;
 	
 	/**
-	 * 访问uri
+	 * 请求响应时间
 	 */
-	private String uri;
-	
-	/**
-	 * userAgent
-	 */
-	private String agent;
-	
-	/**
-	 * 请求时间
-	 */
-	private String time;
-	
-	/**
-	 * 额外参数
-	 */
-	private Map<String, Object> args;
-	
-	public String getAddr() {
-		return addr;
+	private float requestTime;
+
+	public String getRemoteAddr() {
+		return remoteAddr;
 	}
 
-	public void setAddr(String addr) {
-		this.addr = addr;
+	public void setRemoteAddr(String remoteAddr) {
+		this.remoteAddr = remoteAddr;
 	}
 
-	public String getUri() {
-		return uri;
+	public String getRemoteUser() {
+		return remoteUser;
 	}
 
-	public void setUri(String uri) {
-		this.uri = uri;
+	public void setRemoteUser(String remoteUser) {
+		this.remoteUser = remoteUser;
 	}
 
-	public String getAgent() {
-		return agent;
+	public Date getTimeLocal() {
+		return timeLocal;
 	}
 
-	public void setAgent(String agent) {
-		this.agent = agent;
+	public void setTimeLocal(Date timeLocal) {
+		this.timeLocal = timeLocal;
 	}
 
-	public String getTime() {
-		// TODO
-		// 按日期统计log,日期格式
-		return time;
+	public String getHttpHost() {
+		return httpHost;
 	}
 
-	public void setTime(String time) {
-		this.time = time;
+	public void setHttpHost(String httpHost) {
+		this.httpHost = httpHost;
 	}
 
-	public Map<String, Object> getArgs() {
-		return args;
+	public NginxRequestInfo getRequest() {
+		return request;
 	}
 
-	public void setArgs(Map<String, Object> args) {
-		this.args = args;
+	public void setRequest(NginxRequestInfo request) {
+		this.request = request;
+	}
+
+	public int getStatus() {
+		return status;
+	}
+
+	public void setStatus(int status) {
+		this.status = status;
+	}
+
+	public int getBodyBytesSent() {
+		return bodyBytesSent;
+	}
+
+	public void setBodyBytesSent(int bodyBytesSent) {
+		this.bodyBytesSent = bodyBytesSent;
+	}
+
+	public String getHttpXforwardedFor() {
+		return httpXforwardedFor;
+	}
+
+	public void setHttpXforwardedFor(String httpXforwardedFor) {
+		this.httpXforwardedFor = httpXforwardedFor;
+	}
+
+	public String getHttpUserAgent() {
+		return httpUserAgent;
+	}
+
+	public void setHttpUserAgent(String httpUserAgent) {
+		this.httpUserAgent = httpUserAgent;
+	}
+
+	public float getRequestTime() {
+		return requestTime;
+	}
+
+	public void setRequestTime(float requestTime) {
+		this.requestTime = requestTime;
 	}
 
 	/**
 	 * 接口方法
+	 * 
 	 * @return
 	 */
 	public String getMethod() {
 		if (isHessianRequest()) {
-			return this.uri;
-		} else if (this.getArgs() != null) {
-			String method = String.valueOf(this.args.get("method"));
+			return this.request.getRequestUri();
+		} else if (this.request.getRequestParams() != null) {
+			String method = String.valueOf(this.request.getRequestParams().get(
+					"method"));
 			if (method.contains(",")) {
 				method = method.substring(0, method.indexOf(","));
 			}
@@ -101,13 +166,15 @@ public class NginxLog implements Serializable {
 
 	/**
 	 * 接口版本
+	 * 
 	 * @return
 	 */
 	public String getVersion() {
 		if (isHessianRequest()) {
 			return null;
-		} else if (this.getArgs() != null) {
-			String version = String.valueOf(this.args.get("version"));
+		} else if (this.request.getRequestParams() != null) {
+			String version = String.valueOf(this.request.getRequestParams()
+					.get("version"));
 			if (version.contains(",")) {
 				version = version.substring(0, version.indexOf(","));
 			}
@@ -118,10 +185,22 @@ public class NginxLog implements Serializable {
 
 	/**
 	 * 是否是hessian请求
+	 * 
 	 * @return
 	 */
 	private boolean isHessianRequest() {
-		return !agent.isEmpty() && agent.startsWith("Java");
+		return !httpUserAgent.isEmpty() && httpUserAgent.startsWith("Java");
 	}
-	
+
+	@Override
+	public String toString() {
+		return "NginxLog [remoteAddr=" + remoteAddr + ", remoteUser="
+				+ remoteUser + ", timeLocal=" + timeLocal + ", httpHost="
+				+ httpHost + ", request=" + request + ", status=" + status
+				+ ", bodyBytesSent=" + bodyBytesSent + ", httpXforwardedFor="
+				+ httpXforwardedFor + ", httpUserAgent=" + httpUserAgent
+				+ ", requestTime=" + requestTime + ",method="
+				+ getMethod() + ", version=" + getVersion() + "]";
+	}
+
 }

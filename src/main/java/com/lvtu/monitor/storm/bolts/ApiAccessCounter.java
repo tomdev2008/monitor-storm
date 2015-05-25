@@ -47,7 +47,7 @@ public class ApiAccessCounter extends BaseBasicBolt {
 	 */
 	@Override
 	public void cleanup() {
-		log.info("-- Word Counter [" + componentName + "-" + taskId + "] --");
+		log.info("-- Api Access Counter [" + componentName + "-" + taskId + "] --");
 		for (Map.Entry<String, Integer> entry : accessCounters.entrySet()) {
 			log.info(entry.getKey() + ": " + entry.getValue());
 		}
@@ -83,7 +83,7 @@ public class ApiAccessCounter extends BaseBasicBolt {
 		}
 		// 获取接口的方法名和版本号
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-		String dateStr = sdf.format(new Date());
+		String dateStr = sdf.format(logEntity.getTimeLocal());
 		String key = logEntity.getMethod() + "_" + logEntity.getVersion() + "_"
 				+ dateStr;
 

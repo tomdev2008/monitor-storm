@@ -66,7 +66,7 @@ public class ApiIpCounter extends BaseBasicBolt {
 		if (logEntity == null) {
 			return;
 		}
-		log.info("ip:" + logEntity.getAddr());
+		log.info("ip:" + logEntity.getRemoteAddr());
 		String key = logEntity.getMethod() + "_" + logEntity.getVersion();
 		if (!counters.containsKey(key)) {
 			counters.put(key, 1);

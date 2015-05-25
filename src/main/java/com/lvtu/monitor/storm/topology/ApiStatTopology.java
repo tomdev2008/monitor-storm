@@ -6,6 +6,7 @@ import backtype.storm.Config;
 import backtype.storm.generated.StormTopology;
 import backtype.storm.topology.TopologyBuilder;
 
+import com.lvtu.monitor.storm.bolts.AbnormalAccessRecorder;
 import com.lvtu.monitor.storm.bolts.ApiAccessCounter;
 import com.lvtu.monitor.storm.bolts.ApiIpCounter;
 import com.lvtu.monitor.storm.spouts.NginxLogReader;
@@ -55,13 +56,18 @@ public class ApiStatTopology {
 		NginxLogReader logReader = new NginxLogReader();
 		ApiAccessCounter accessCounter = new ApiAccessCounter();
 		ApiIpCounter ipCounter = new ApiIpCounter();
+		AbnormalAccessRecorder abnormalRecorder = new AbnormalAccessRecorder();
 		Integer accessCounterNum = Integer.valueOf(Constant
 				.getValue("api_access_counter.parallelism_hint"));
 		Integer ipCounterNum = Integer.valueOf(Constant
 				.getValue("api_ip_counter.parallelism_hint"));
+		Integer abnormalRecorderNum = Integer.valueOf(Constant
+				.getValue("abnormal_access_recorder.parallelism_hint"));
 		builder.setSpout("logReader", logReader);
 		builder.setBolt("accessCounter", accessCounter, accessCounterNum)
 				.shuffleGrouping("logReader");
+		builder.setBolt("abnormalRecorder", abnormalRecorder,
+				abnormalRecorderNum).shuffleGrouping("logReader");
 		builder.setBolt("ipCounter", ipCounter, ipCounterNum).shuffleGrouping(
 				"logReader");
 		// builder.setBolt("ipCounter", ipCounter,

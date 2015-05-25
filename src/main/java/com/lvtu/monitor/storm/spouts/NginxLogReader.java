@@ -15,9 +15,11 @@ import backtype.storm.topology.base.BaseRichSpout;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
 
+import com.lvtu.monitor.storm.entity.LogstashInfo;
 import com.lvtu.monitor.storm.entity.NginxLog;
 import com.lvtu.monitor.util.Constant;
 import com.lvtu.monitor.util.Constant.PROPERTY_FILE;
+import com.lvtu.monitor.util.NginxLogConvertor;
 import com.lvtu.monitor.util.httpsqs4j.HttpsqsClient;
 import com.lvtu.monitor.util.httpsqs4j.HttpsqsClientWrapper;
 import com.lvtu.monitor.util.httpsqs4j.HttpsqsException;
@@ -71,7 +73,9 @@ public class NginxLogReader extends BaseRichSpout {
 		try {
 			String result = client.getString(queueName);
 			log.info(result);
-			NginxLog nginxLog = Json.fromJson(NginxLog.class, result);
+			LogstashInfo logstashInfo = Json.fromJson(LogstashInfo.class, result);
+			// TODO 测试环境和线上日志格式不同
+			NginxLog nginxLog = NginxLogConvertor.testConvert(logstashInfo.getMessage());
 			this.collector.emit(new Values(nginxLog), "nginxLog");
 		} catch (HttpsqsException e) {
 			
